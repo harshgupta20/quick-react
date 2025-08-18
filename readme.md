@@ -5,7 +5,9 @@
 ## ✨ Features
 - **Interactive Setup** — prompts you for project name, CSS framework, and optional packages
 - **CSS Framework Support** — Tailwind CSS, Bootstrap, or MUI (Material UI)
-- **Optional Packages** — easily add Axios, React Icons, React Hook Form, Yup, Formik, and Moment.js
+- **Testing Framework Integration** — Vitest, Jest, or Cypress support with pre-configured setups
+- **Development Tools** — ESLint + Prettier, Husky git hooks, Commitizen for conventional commits
+- **Optional Packages** — easily add Axios, React Icons, React Hook Form, Yup, Formik, Moment.js, Zustand, TanStack Query, Framer Motion, and React Helmet
 - **Automatic Folder Structure** — creates `components`, `pages`, `hooks`, `store`, `utils`, `assets` folders
 - **Boilerplate Ready** — replaces default Vite boilerplate with a clean welcome page
 - **Axios Setup** — pre-configured Axios instance if selected
@@ -21,7 +23,9 @@ npx quickstart-react
 When you run `npx quickstart-react`, you will be prompted to:
 1. **Enter Project Name** — e.g., `my-app`
 2. **Choose CSS Framework** — Tailwind, Bootstrap, or MUI
-3. **Select Optional Packages** — choose from a list of commonly used React libraries
+3. **Select Testing Framework** — Vitest, Jest, Cypress, or None
+4. **Choose Optional Packages** — choose from a list of commonly used React libraries
+5. **Select Development Tools** — ESLint + Prettier, Husky, Commitizen
 
 Example run:
 ```bash
@@ -32,13 +36,18 @@ npx quickstart-react
 ```
 ? Enter project name: my-portfolio
 ? Choose a CSS framework: Tailwind
-? Select optional packages: Axios, React Icons
+? Choose a testing framework: Vitest + React Testing Library
+? Select optional packages: Axios, React Icons, Zustand
+? Select development tools: ESLint + Prettier, Husky
 ```
 
 This will:
 - Create a new Vite + React project in `my-portfolio/`
 - Install Tailwind CSS and configure it with Vite
-- Install Axios and React Icons
+- Set up Vitest with React Testing Library for testing
+- Install Axios, React Icons, and Zustand
+- Configure ESLint + Prettier for code quality
+- Set up Husky for git hooks
 - Create standard project folders
 - Add a clean welcome screen
 - Set up an Axios instance at `src/utils/axiosInstance.js`
@@ -87,6 +96,23 @@ You can add these during setup:
 - **Yup** — schema validation
 - **Formik** — form management
 - **Moment.js** — date/time utilities
+- **Zustand** — lightweight state management
+- **TanStack Query** — data fetching and caching
+- **Framer Motion** — animation library
+- **React Helmet** — document head management for SEO
+
+## 🧪 Testing Framework Support
+Choose from these testing options:
+- **Vitest + React Testing Library** — fast unit testing with Vite integration
+- **Jest + React Testing Library** — traditional React testing setup
+- **Cypress** — end-to-end testing framework
+- **None** — skip testing setup
+
+## 🛠️ Development Tools
+Enhance your development workflow with:
+- **ESLint + Prettier** — code linting and formatting
+- **Husky** — git hooks for pre-commit checks
+- **Commitizen** — conventional commit messages
 
 ## 🚀 Quick Start
 ```bash
