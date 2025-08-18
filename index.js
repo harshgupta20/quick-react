@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import inquirer from "inquirer";
+import checkboxSearch from 'inquirerjs-checkbox-search';
 import { execSync } from "child_process";
 import path from "path";
 import fs from "fs";
@@ -26,11 +27,27 @@ const run = (cmd, cwd = process.cwd()) => {
                 "Tailwind",
                 "Bootstrap (CDN)",
                 "React Bootstrap",
-                "MUI"
+                "MUI",
+                "shadcn/ui"
             ]
         }
     ]);
 
+    // 2.5. If shadcn/ui is chosen, show component search
+    let selectedShadcnComponents = []
+    let shadcnRegistry = []
+    if (cssFramework === "shadcn/ui") {
+      // Load components JSON (expects: { components: [{ name, value }, ...] })
+      const raw = fs.readFileSync("./shadcn-components.json", "utf8");
+      shadcnRegistry = (JSON.parse(raw).components) || [];
+
+      // Prompt with searchable checkbox
+      const components = await checkboxSearch({
+          message: 'Which shadcn/ui components do you use?',
+          choices: shadcnRegistry,
+      });
+      selectedShadcnComponents = components;
+    }
     // 3. Ask optional packages
     const { packages } = await inquirer.prompt([
         {
@@ -49,6 +66,7 @@ const run = (cmd, cwd = process.cwd()) => {
     ]);
 
     // 4. Create Vite + React project
+    
     run(`npm create vite@latest ${projectName} -- --template react`);
     const projectPath = path.join(process.cwd(), projectName);
 
@@ -108,6 +126,87 @@ const run = (cmd, cwd = process.cwd()) => {
             .replace(/import\s+['"]\.\/index\.css['"];?/g, "")
             .replace(/import\s+['"]\.\/App\.css['"];?/g, "");
         fs.writeFileSync(mainPath, mainContent);
+    } else if (cssFramework === "shadcn/ui") {
+        // A. Install tailwind + vite plugin
+        run(`npm install tailwindcss @tailwindcss/vite`, projectPath);
+
+        // B. jsconfig.json with path alias
+        const jsconfigPath = path.join(projectPath, "jsconfig.json");
+        const jsconfig = {
+            compilerOptions: {
+                baseUrl: ".",
+                paths: {
+                    "@/*": ["./src/*"]
+                }
+            }
+        };
+        fs.writeFileSync(jsconfigPath, JSON.stringify(jsconfig, null, 2));
+
+        // C. Update vite.config.js: alias + tailwindcss() plugin
+        const viteConfigPath = path.join(projectPath, "vite.config.js");
+        let viteConfig = fs.readFileSync(viteConfigPath, "utf-8");
+        if (!/import\s+tailwindcss\s+from\s+['"]@tailwindcss\/vite['"]/m.test(viteConfig)) {
+            viteConfig = `import tailwindcss from '@tailwindcss/vite'\n` + viteConfig;
+        }
+        if (!/import\s+path\s+from\s+['"]path['"]/m.test(viteConfig)) {
+            viteConfig = viteConfig.replace(/(import\s+.*?from\s+['"][^'"]+['"];?\s*)+/m, (m) => m + `import path from 'path'\n`);
+        }
+        // ensure tailwindcss() in plugins
+        viteConfig = viteConfig.replace(/plugins:\s*\[/, (m) => `${m}\n    tailwindcss(),`);
+        // ensure resolve.alias configured
+        if (!/resolve:\s*\{/m.test(viteConfig)) {
+            viteConfig = viteConfig.replace(/export\s+default\s+defineConfig\(\{/, (m) => `${m}\n  resolve: {\n    alias: {\n      "@": path.resolve(__dirname, "src"),\n    },\n  },`);
+        } else if (!/alias:\s*\{/m.test(viteConfig)) {
+            viteConfig = viteConfig.replace(/resolve:\s*\{/, (m) => `${m}\n    alias: {\n      "@": path.resolve(__dirname, "src"),\n    },`);
+        } else if (!/['"]@['"]:\s*path\.resolve\(__dirname,\s*['"]src['"]\)/m.test(viteConfig)) {
+            viteConfig = viteConfig.replace(/alias:\s*\{/, (m) => `${m}\n      "@": path.resolve(__dirname, "src"),`);
+        }
+        fs.writeFileSync(viteConfigPath, viteConfig);
+
+        // D. Tailwind CSS entry
+        fs.writeFileSync(path.join(projectPath, "src", "index.css"), `@import "tailwindcss";\n`);
+
+        // E. Import CSS in main file
+        const mainFile = fs.existsSync(path.join(projectPath, "src/main.jsx"))
+            ? "src/main.jsx"
+            : "src/main.tsx";
+        const mainPath = path.join(projectPath, mainFile);
+        let mainContent = fs.readFileSync(mainPath, "utf-8");
+        mainContent = mainContent.replace(/import\s+['"]\.\/index\.css['"];?/g, "");
+        if (!mainContent.includes(`import './index.css'`)) {
+            mainContent = `import './index.css';\n` + mainContent;
+        }
+        fs.writeFileSync(mainPath, mainContent);
+
+        // F. Initialize shadcn/ui
+        run(`npx  shadcn@latest init`, projectPath);
+
+        // G. Override aliases in components.json
+        const componentsJsonPath = path.join(projectPath, "components.json");
+        if (fs.existsSync(componentsJsonPath)) {
+            const compJson = JSON.parse(fs.readFileSync(componentsJsonPath, "utf-8"));
+            compJson.aliases = { components: "@/components", utils: "@/utils" };
+            fs.writeFileSync(componentsJsonPath, JSON.stringify(compJson, null, 2));
+        }
+
+        // H. Install selected components using their values
+        const installValues = selectedShadcnComponents
+        .map((val) => val.split(":")[0]);
+
+        if (installValues.length > 0) {
+            run(`npx shadcn@latest add ${installValues.join(' ')}`, projectPath);
+
+            // Run extra commands for selected components, if any
+            const extraCommands = Array.from(new Set(
+                (shadcnRegistry || [])
+                    .filter((c) => selectedShadcnComponents.includes(c.value) && c.extraCommands)
+                    .map((c) => c.extraCommands)
+            ));
+
+            for (const cmd of extraCommands) {
+                run(cmd, projectPath);
+            }
+        }
     }
 
     // 6. Install default + optional packages
@@ -179,7 +278,7 @@ api.interceptors.response.use(
     if (fs.existsSync(appCssPath)) fs.unlinkSync(appCssPath);
 
     const indexCssPath = path.join(projectPath, "src", "index.css");
-    if (cssFramework !== "Tailwind" && fs.existsSync(indexCssPath)) {
+    if (cssFramework !== "Tailwind" && cssFramework !== "shadcn/ui" && fs.existsSync(indexCssPath)) {
         fs.unlinkSync(indexCssPath);
     }
 
@@ -230,7 +329,7 @@ api.interceptors.response.use(
     let cssImports = "";
     if (cssFramework === "React Bootstrap") {
         cssImports = `import 'bootstrap/dist/css/bootstrap.min.css';\n`;
-    } else if (cssFramework === "Tailwind") {
+    } else if (cssFramework === "Tailwind" || cssFramework === "shadcn/ui") {
         cssImports = `import './index.css';\n`;
     } else if (cssFramework === "Bootstrap (CDN)") {
         cssImports = ""; // CDN already added in index.html

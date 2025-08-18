@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/harshgupta20/quickstart-react#readme",
   "dependencies": {
-    "inquirer": "^9.2.7"
+    "inquirer": "^9.3.7",
+    "inquirerjs-checkbox-search": "^0.6.0"
   }
 }
