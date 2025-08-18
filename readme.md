@@ -3,6 +3,7 @@
 🚀 **quickstart-react** is an open-source CLI tool that lets you instantly create a Vite + React app with your choice of CSS framework, optional packages, and pre-configured project structure — all in one command.
 
 ## ✨ Features
+- **Language Selection & Type Safety** — prompts you to choose JavaScript or TypeScript. Automatically sets up PropTypes for JS or installs TypeScript and types for TS. All generated files use the correct extensions and templates for your selection.
 - **Interactive Setup** — prompts you for project name, CSS framework, and optional packages
 - **CSS Framework Support** — Tailwind CSS, Bootstrap, or MUI (Material UI)
 - **Optional Packages** — easily add Axios, React Icons, React Hook Form, Yup, Formik, and Moment.js
@@ -18,10 +19,12 @@ npx quickstart-react
 ```
 
 ## 🛠 Usage
+
 When you run `npx quickstart-react`, you will be prompted to:
-1. **Enter Project Name** — e.g., `my-app`
-2. **Choose CSS Framework** — Tailwind, Bootstrap, or MUI
-3. **Select Optional Packages** — choose from a list of commonly used React libraries
+1. **Choose Project Language** — JavaScript or TypeScript
+2. **Enter Project Name** — e.g., `my-app`
+3. **Choose CSS Framework** — Tailwind, Bootstrap, or MUI
+4. **Select Optional Packages** — choose from a list of commonly used React libraries
 
 Example run:
 ```bash
@@ -42,6 +45,15 @@ This will:
 - Create standard project folders
 - Add a clean welcome screen
 - Set up an Axios instance at `src/utils/axiosInstance.js`
+- Use `.tsx`/`.ts` files and install TypeScript/types if you chose TypeScript, or use `.jsx`/`.js` files and set up PropTypes if you chose JavaScript
+## 🧠 How Language Selection & Type Safety Works
+
+- At the start, you choose JavaScript or TypeScript.
+- The tool uses the correct Vite template (`react` or `react-ts`) based on your choice.
+- All generated files (e.g., `App.jsx`/`App.tsx`, `main.jsx`/`main.tsx`) use the appropriate extension.
+- If you select JavaScript, PropTypes is installed and set up in the main App component for runtime prop validation.
+- If you select TypeScript, TypeScript and all necessary type packages are installed and used throughout the project.
+- The tool automatically detects and updates either `vite.config.js` or `vite.config.ts` for Tailwind setup.
 
 ## 📂 Folder Structure
 After running, your project will look like this:

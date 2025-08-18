@@ -10,13 +10,27 @@ const run = (cmd, cwd = process.cwd()) => {
     execSync(cmd, { stdio: "inherit", cwd });
 };
 
+
 (async () => {
-    // 1. Ask project name
+    // 1. Ask for language
+    const { language } = await inquirer.prompt([
+        {
+            type: "list",
+            name: "language",
+            message: "Choose project language:",
+            choices: [
+                { name: "JavaScript", value: "js" },
+                { name: "TypeScript", value: "ts" }
+            ]
+        }
+    ]);
+
+    // 2. Ask project name
     const { projectName } = await inquirer.prompt([
         { type: "input", name: "projectName", message: "Enter project name:" }
     ]);
 
-    // 2. Ask for CSS framework
+    // 3. Ask for CSS framework
     const { cssFramework } = await inquirer.prompt([
         {
             type: "list",
@@ -31,7 +45,7 @@ const run = (cmd, cwd = process.cwd()) => {
         }
     ]);
 
-    // 3. Ask optional packages
+    // 4. Ask optional packages
     const { packages } = await inquirer.prompt([
         {
             type: "checkbox",
@@ -48,25 +62,34 @@ const run = (cmd, cwd = process.cwd()) => {
         }
     ]);
 
-    // 4. Create Vite + React project
-    run(`npm create vite@latest ${projectName} -- --template react`);
+    // 5. Create Vite + React project with correct template
+    const viteTemplate = language === "ts" ? "react-ts" : "react";
+    run(`npm create vite@latest ${projectName} -- --template ${viteTemplate}`);
     const projectPath = path.join(process.cwd(), projectName);
 
-    // 5. Install chosen CSS framework
+    // 6. Install chosen CSS framework
+    const mainFileExt = language === "ts" ? "tsx" : "jsx";
+
     if (cssFramework === "Tailwind") {
         run(`npm install tailwindcss @tailwindcss/vite`, projectPath);
 
-        const viteConfigPath = path.join(projectPath, "vite.config.js");
-        let viteConfig = fs.readFileSync(viteConfigPath, "utf-8");
-        viteConfig = `import tailwindcss from '@tailwindcss/vite'\n` + viteConfig;
-        viteConfig = viteConfig.replace(/plugins:\s*\[/, "plugins: [\n    tailwindcss(),");
-        fs.writeFileSync(viteConfigPath, viteConfig);
+        // Support both vite.config.js and vite.config.ts
+        let viteConfigPath = path.join(projectPath, "vite.config.js");
+        if (!fs.existsSync(viteConfigPath)) {
+            viteConfigPath = path.join(projectPath, "vite.config.ts");
+        }
+        if (fs.existsSync(viteConfigPath)) {
+            let viteConfig = fs.readFileSync(viteConfigPath, "utf-8");
+            viteConfig = `import tailwindcss from '@tailwindcss/vite'\n` + viteConfig;
+            viteConfig = viteConfig.replace(/plugins:\s*\[/, "plugins: [\n    tailwindcss(),");
+            fs.writeFileSync(viteConfigPath, viteConfig);
+        }
 
         fs.writeFileSync(path.join(projectPath, "src", "index.css"), `@import "tailwindcss";\n`);
 
-        const mainFile = fs.existsSync(path.join(projectPath, "src/main.jsx"))
-            ? "src/main.jsx"
-            : "src/main.tsx";
+        const mainFile = fs.existsSync(path.join(projectPath, `src/main.${mainFileExt}`))
+            ? `src/main.${mainFileExt}`
+            : (language === "ts" ? "src/main.tsx" : "src/main.jsx");
         const mainPath = path.join(projectPath, mainFile);
         let mainContent = fs.readFileSync(mainPath, "utf-8");
         mainContent = mainContent.replace(/import\s+['"]\.\/index\.css['"];?/g, "");
@@ -86,9 +109,9 @@ const run = (cmd, cwd = process.cwd()) => {
 
     } else if (cssFramework === "React Bootstrap") {
         run(`npm install react-bootstrap bootstrap`, projectPath);
-        const mainFile = fs.existsSync(path.join(projectPath, "src/main.jsx"))
-            ? "src/main.jsx"
-            : "src/main.tsx";
+        const mainFile = fs.existsSync(path.join(projectPath, `src/main.${mainFileExt}`))
+            ? `src/main.${mainFileExt}`
+            : (language === "ts" ? "src/main.tsx" : "src/main.jsx");
         const mainPath = path.join(projectPath, mainFile);
         let mainContent = fs.readFileSync(mainPath, "utf-8");
         mainContent = mainContent
@@ -99,9 +122,9 @@ const run = (cmd, cwd = process.cwd()) => {
 
     } else if (cssFramework === "MUI") {
         run(`npm install @mui/material @emotion/react @emotion/styled`, projectPath);
-        const mainFile = fs.existsSync(path.join(projectPath, "src/main.jsx"))
-            ? "src/main.jsx"
-            : "src/main.tsx";
+        const mainFile = fs.existsSync(path.join(projectPath, `src/main.${mainFileExt}`))
+            ? `src/main.${mainFileExt}`
+            : (language === "ts" ? "src/main.tsx" : "src/main.jsx");
         const mainPath = path.join(projectPath, mainFile);
         let mainContent = fs.readFileSync(mainPath, "utf-8");
         mainContent = mainContent
@@ -110,11 +133,17 @@ const run = (cmd, cwd = process.cwd()) => {
         fs.writeFileSync(mainPath, mainContent);
     }
 
-    // 6. Install default + optional packages
+    // 7. Install default + optional packages
     const defaultPackages = ["react-router-dom"];
     const allPackages = [...defaultPackages, ...packages];
+    if (language === "js") {
+        allPackages.push("prop-types");
+    }
     if (allPackages.length > 0) {
         run(`npm install ${allPackages.join(" ")}`, projectPath);
+    }
+    if (language === "ts") {
+        run("npm install -D typescript @types/react @types/react-dom @types/node", projectPath);
     }
 
     // 7. Create folder structure
@@ -123,7 +152,7 @@ const run = (cmd, cwd = process.cwd()) => {
         fs.mkdirSync(path.join(projectPath, "src", folder), { recursive: true });
     });
 
-    // 8. Axios setup if chosen
+    // 9. Axios setup if chosen
     if (packages.includes("axios")) {
         const axiosContent = `import axios from "axios";
 
@@ -174,7 +203,7 @@ api.interceptors.response.use(
         fs.writeFileSync(path.join(projectPath, "src", "utils", "axiosInstance.js"), axiosContent);
     }
 
-    // 9. Clean up default CSS files (centralized)
+    // 10. Clean up default CSS files (centralized)
     const appCssPath = path.join(projectPath, "src", "App.css");
     if (fs.existsSync(appCssPath)) fs.unlinkSync(appCssPath);
 
@@ -183,12 +212,19 @@ api.interceptors.response.use(
         fs.unlinkSync(indexCssPath);
     }
 
-    // 10. Replace App.jsx content
-    const appFile = fs.existsSync(path.join(projectPath, "src/App.jsx"))
-        ? path.join(projectPath, "src/App.jsx")
-        : path.join(projectPath, "src/App.tsx");
 
-    let appContent = `export default function App() {
+    // 11. Replace App file content with correct extension and type safety
+    const appFile = fs.existsSync(path.join(projectPath, `src/App.${mainFileExt}`))
+        ? path.join(projectPath, `src/App.${mainFileExt}`)
+        : path.join(projectPath, language === "ts" ? "src/App.tsx" : "src/App.jsx");
+
+    let appContent = "";
+    if (language === "ts") {
+        appContent = `import React from "react";
+
+type AppProps = {};
+
+const App: React.FC<AppProps> = () => {
   return (
     <div
       style={{
@@ -218,14 +254,59 @@ api.interceptors.response.use(
       </p>
     </div>
   );
-}`;
+};
+
+export default App;
+`;
+    } else {
+        appContent = `import React from "react";
+import PropTypes from "prop-types";
+
+function App(props) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        fontFamily: "sans-serif",
+        background: "#f9fafb",
+        color: "#111",
+        textAlign: "center",
+      }}
+    >
+      <h1
+        style={{
+          fontSize: "2.5rem",
+          marginBottom: "0.5rem",
+          fontWeight: 600,
+        }}
+      >
+        Welcome to{" "}
+        <span style={{ color: "#2563eb" }}>${projectName}</span> 🚀
+      </h1>
+      <p style={{ fontSize: "1.1rem", color: "#555" }}>
+        Your project is ready. Start building amazing things!
+      </p>
+    </div>
+  );
+}
+
+App.propTypes = {};
+
+export default App;
+`;
+    }
     fs.writeFileSync(appFile, appContent);
 
-    // 11. Default Router setup in main.jsx
-    const mainFile = fs.existsSync(path.join(projectPath, "src/main.jsx"))
-        ? "src/main.jsx"
-        : "src/main.tsx";
-    const mainPath = path.join(projectPath, mainFile);
+
+    // 12. Default Router setup in main file
+    const mainFileName = fs.existsSync(path.join(projectPath, `src/main.${mainFileExt}`))
+        ? `src/main.${mainFileExt}`
+        : (language === "ts" ? "src/main.tsx" : "src/main.jsx");
+    const mainPath = path.join(projectPath, mainFileName);
 
     let cssImports = "";
     if (cssFramework === "React Bootstrap") {
