@@ -5,11 +5,13 @@
 ## ✨ Features
 - **Interactive Setup** — prompts you for project name, CSS framework, and optional packages
 - **CSS Framework Support** — Tailwind CSS, Bootstrap, or MUI (Material UI)
-- **Optional Packages** — easily add Axios, React Icons, React Hook Form, Yup, Formik, and Moment.js
+- **Optional Packages** — easily add Axios, React Icons, React Hook Form, Yup, Formik, Moment.js, i18next (internationalization), and shadcn/ui
 - **Automatic Folder Structure** — creates `components`, `pages`, `hooks`, `store`, `utils`, `assets` folders
 - **Boilerplate Ready** — replaces default Vite boilerplate with a clean welcome page
 - **Axios Setup** — pre-configured Axios instance if selected
 - **CSS Integration** — automatically configures your chosen CSS framework with Vite
+- **Internationalization** - supports multi-language apps with i18next
+- **Shadcn/ui Integration** - adds customizable UI components with shadcn/ui
 
 ## 📦 Installation
 You don’t need to install it globally — run it instantly with `npx`:
@@ -32,7 +34,7 @@ npx quickstart-react
 ```
 ? Enter project name: my-portfolio
 ? Choose a CSS framework: Tailwind
-? Select optional packages: Axios, React Icons
+? Select optional packages: Axios, React Icons , i18next (internationalization), shadcn/ui
 ```
 
 This will:
@@ -87,6 +89,10 @@ You can add these during setup:
 - **Yup** — schema validation
 - **Formik** — form management
 - **Moment.js** — date/time utilities
+- **i18next (internationalization)** - enables multi-language support with pre-configured i18n.js
+- **shadcn/ui** - customizable, accessible UI components with a sample button
+
+
 
 ## 🚀 Quick Start
 ```bash
