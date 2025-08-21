@@ -3,8 +3,8 @@ import inquirer from "inquirer";
 import path from "path";
 import { run, createFolder, deleteFile } from './lib/utils.js';
 import { initializePWA } from './lib/pwa.js';
-import { setupCSSFramework } from './lib/css-frameworks.js';
-import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme } from './lib/templates.js';
+import { frameworks, optionalPackages, setupCSSFramework } from './lib/css-frameworks.js';
+import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme, createI18nSetup, setupShadcn } from './lib/templates.js';
 
 (async () => {
     // 1. Collect user inputs
@@ -36,7 +36,9 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
                 { name: "React Hook Form", value: "react-hook-form" },
                 { name: "Yup", value: "yup" },
                 { name: "Formik", value: "formik" },
-                { name: "Moment.js", value: "moment" }
+                { name: "Moment.js", value: "moment" },
+                { name: "i18next (internationalization)", value: "i18n" },
+                { name: "shadcn/ui", value: "shadcn" }
             ]
         }
     ]);
@@ -57,12 +59,19 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
 
     // 4. Install packages
     const defaultPackages = ["react-router-dom"];
-    const allPackages = [...defaultPackages, ...packages];
+    const additionalPackages = [];
+    if (packages.includes("i18n")) {
+        additionalPackages.push("react-i18next", "i18next", "i18next-browser-languagedetector");
+    }
+    if (packages.includes("shadcn")) {
+        additionalPackages.push("lucide-react");
+    }
+    const allPackages = [...defaultPackages, ...packages, ...additionalPackages];
     if (allPackages.length > 0) {
         run(`npm install ${allPackages.join(" ")}`, projectPath);
     }
 
-    // 5. Setup PWA if selected (after folder structure is created)
+    // 5. Setup PWA if selected
     if (isPWA) {
         initializePWA(projectPath, projectName);
     }
@@ -75,28 +84,45 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
         createAxiosSetup(projectPath);
     }
 
-    // 8. Clean up default boilerplate files
+    // 8. Setup i18next if selected
+    if (packages.includes("i18n")) {
+        createI18nSetup(projectPath);
+    }
+
+    // 9. Setup shadcn/ui if selected
+    if (packages.includes("shadcn")) {
+        setupShadcn(projectPath);
+    }
+
+    // 10. Clean up default boilerplate files
     deleteFile(path.join(projectPath, "src", "App.css"));
     if (cssFramework !== "Tailwind") {
         deleteFile(path.join(projectPath, "src", "index.css"));
     }
 
-    // 9. Generate clean templates
-    createAppComponent(projectPath, projectName, isPWA);
+    // 11. Generate clean templates
+    createAppComponent(projectPath, projectName, isPWA, cssFramework, packages);
     setupRouterMain(projectPath, cssFramework);
     
-    // 10. Create comprehensive README
+    // 12. Create comprehensive README
     createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA);
 
-    // 11. Success message
+    // 13. Success message
     console.log("\n✅ Setup complete!");
     if (isPWA) {
         console.log("📱 PWA features enabled - your app can be installed on mobile devices!");
         console.log("⚠️  Important: Replace placeholder SVG icons with proper PNG icons for production");
     }
+    if (packages.includes("i18n")) {
+        console.log("🌐 Internationalization enabled with react-i18next. Check src/i18n.js for configuration.");
+    }
+    if (packages.includes("shadcn")) {
+        console.log("🎨 Shadcn/ui components installed. Use 'npx shadcn-ui@latest add <component>' to add more components.");
+    }
     console.log(`\nNext steps:\n  cd ${projectName}\n  npm install\n  npm run dev`);
     
     if (isPWA) {
-        console.log(`\n📱 To test PWA:\n  npm run build\n  npm run preview\n  Open http://localhost:5173 and test install/offline features`);
+        console.log(`\n📱 To test PWA:\n  npm run build\n  npm run preview\n  Open http://localhost:4173 and test install/offline features`);
     }
 })();
+
