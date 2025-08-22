@@ -16,6 +16,12 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
         },
         {
             type: "list",
+            name: "language",
+            message: "Language:",
+            choices: ["JavaScript", "TypeScript"],
+        },
+        {
+            type: "list",
             name: "cssFramework",
             message: "Choose a CSS framework:",
             choices: ["Tailwind", "Bootstrap (CDN)", "React Bootstrap", "MUI"]
@@ -41,13 +47,14 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
         }
     ]);
 
-    const { projectName, cssFramework, isPWA, packages } = answers;
+    const { projectName, language, cssFramework, isPWA, packages } = answers;
     const projectPath = path.join(process.cwd(), projectName);
+    const isTS = language == "TypeScript";
 
     console.log(`\n🚀 Creating ${projectName}${isPWA ? ' with PWA capabilities' : ''}...`);
 
     // 2. Create Vite project
-    run(`npm create vite@latest ${projectName} -- --template react`);
+    run(`npm create vite@latest ${projectName} -- --template ${isTS ? "react-ts" : "react"}`);
 
     // 3. Create all necessary folder structure first
     const folders = ["components", "pages", "hooks", "store", "utils", "assets"];
