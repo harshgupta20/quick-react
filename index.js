@@ -60,16 +60,22 @@ import { setupRoutingFramework } from "./lib/router-setup.js";
     const folders = ["components", "pages", "hooks", "store", "utils", "assets"];
 
     // Create the routes folder (for tanstack router) and the necessary packages for Router setup
-    let routingPackages = [];
-
-    if(routingFramework === "Tanstack Router") {
-        folders.push("routes");
-        routingPackages = [
-          "@tanstack/react-router", " @tanstack/react-router-devtools",
-        ];
-    }else {
-        routingPackages = ["react-router"]
-    }
+    const routingConfig = {
+        "Tanstack Router": {
+            folders: ["routes"],
+            packages: ["@tanstack/react-router", "@tanstack/react-router-devtools"],
+            devPackages: ["@tanstack/router-plugin"]
+        },
+        "React Router": {
+            folders: [],
+            packages: ["react-router"],
+            devPackages: []
+        }
+    };
+    
+    const config = routingConfig[routingFramework] || { folders: [], packages: [], devPackages: [] };
+    folders.push(...config.folders);
+    const routingPackages = config.packages;
     folders.forEach((folder) => {
         createFolder(path.join(projectPath, "src", folder));
     });
@@ -77,9 +83,10 @@ import { setupRoutingFramework } from "./lib/router-setup.js";
     // 4. Install packages
     const allPackages = [...routingPackages, ...packages];
     if (allPackages.length > 0) {
-        run(`npm install ${allPackages.join(" ")} --silent`, projectPath);
-        routingFramework === "Tanstack Router" &&
-          run("npm i -D @tanstack/router-plugin --silent", projectPath);
+        run(`npm install ${allPackages.join(" ")}`, projectPath);
+        if (config.devPackages.length > 0) {
+            run(`npm i -D ${config.devPackages.join(" ")}`, projectPath);
+        }
     }
 
     // 5. Setup PWA if selected (after folder structure is created)
