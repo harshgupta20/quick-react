@@ -54,7 +54,7 @@ import { setupRoutingFramework } from "./lib/router-setup.js";
         }
     ]);
 
-    const { projectName, cssFramework, routingFramework, isPWA, packages } = answers;
+    const { projectName, cssFramework, routingFramework, isPWA, packages, language } = answers;
     const projectPath = path.join(process.cwd(), projectName);
     const isTS = language == "TypeScript";
 
