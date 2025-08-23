@@ -106,7 +106,7 @@ import { setupRoutingFramework } from "./lib/router-setup.js";
 
     // 7. Setup Axios if selected
     if (packages.includes("axios")) {
-        createAxiosSetup(projectPath);
+        createAxiosSetup(projectPath, isTS);
     }
 
     // 8. Clean up default boilerplate files
