@@ -16,6 +16,12 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
         },
         {
             type: "list",
+            name: "language",
+            message: "Choose project language:",
+            choices: ["TypeScript", "JavaScript"],
+        },
+        {
+            type: "list",
             name: "cssFramework",
             message: "Choose a CSS framework:",
             choices: ["Tailwind", "Bootstrap (CDN)", "React Bootstrap", "MUI"]
@@ -41,13 +47,14 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
         }
     ]);
 
-    const { projectName, cssFramework, isPWA, packages } = answers;
+    const { projectName, language, cssFramework, isPWA, packages } = answers;
     const projectPath = path.join(process.cwd(), projectName);
+    const isTS = language == "TypeScript";
 
     console.log(`\n🚀 Creating ${projectName}${isPWA ? ' with PWA capabilities' : ''}...`);
 
     // 2. Create Vite project
-    run(`npm create vite@latest ${projectName} -- --template react`);
+    run(`npm create vite@latest ${projectName} -- --template ${isTS ? "react-ts" : "react"}`);
 
     // 3. Create all necessary folder structure first
     const folders = ["components", "pages", "hooks", "store", "utils", "assets"];
@@ -64,11 +71,11 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
 
     // 5. Setup PWA if selected (after folder structure is created)
     if (isPWA) {
-        initializePWA(projectPath, projectName);
+        initializePWA(projectPath, projectName, isTS);
     }
 
     // 6. Setup CSS framework
-    setupCSSFramework(cssFramework, projectPath);
+    setupCSSFramework(cssFramework, projectPath, isTS);
 
     // 7. Setup Axios if selected
     if (packages.includes("axios")) {
@@ -82,11 +89,11 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
     }
 
     // 9. Generate clean templates
-    createAppComponent(projectPath, projectName, isPWA);
-    setupRouterMain(projectPath, cssFramework);
+    createAppComponent(projectPath, projectName, isPWA, isTS);
+    setupRouterMain(projectPath, cssFramework, isTS);
     
     // 10. Create comprehensive README
-    createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA);
+    createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA, isTS);
 
     // 11. Success message
     console.log("\n✅ Setup complete!");
