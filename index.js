@@ -4,7 +4,8 @@ import path from "path";
 import { run, createFolder, deleteFile } from './lib/utils.js';
 import { initializePWA } from './lib/pwa.js';
 import { setupCSSFramework } from './lib/css-frameworks.js';
-import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme } from './lib/templates.js';
+import { createAxiosSetup, createAppComponent, createPWAReadme } from './lib/templates.js';
+import { setupRoutingFramework } from "./lib/router-setup.js";
 
 (async () => {
     // 1. Collect user inputs
@@ -27,6 +28,12 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
             choices: ["Tailwind", "Bootstrap (CDN)", "React Bootstrap", "MUI"]
         },
         {
+            type: "list",
+            name: "routingFramework",
+            message: "Choose a routing framework:",
+            choices: ["React Router", "Tanstack Router",]
+        },
+        {
             type: "confirm",
             name: "isPWA",
             message: "Do you want to make this a Progressive Web App (PWA)?",
@@ -47,7 +54,7 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
         }
     ]);
 
-    const { projectName, language, cssFramework, isPWA, packages } = answers;
+    const { projectName, cssFramework, routingFramework, isPWA, packages } = answers;
     const projectPath = path.join(process.cwd(), projectName);
     const isTS = language == "TypeScript";
 
@@ -58,15 +65,35 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
 
     // 3. Create all necessary folder structure first
     const folders = ["components", "pages", "hooks", "store", "utils", "assets"];
+
+    // Create the routes folder (for tanstack router) and the necessary packages for Router setup
+    const routingConfig = {
+        "Tanstack Router": {
+            folders: ["routes"],
+            packages: ["@tanstack/react-router", "@tanstack/react-router-devtools"],
+            devPackages: ["@tanstack/router-plugin"]
+        },
+        "React Router": {
+            folders: [],
+            packages: ["react-router"],
+            devPackages: []
+        }
+    };
+    
+    const config = routingConfig[routingFramework] || { folders: [], packages: [], devPackages: [] };
+    folders.push(...config.folders);
+    const routingPackages = config.packages;
     folders.forEach((folder) => {
         createFolder(path.join(projectPath, "src", folder));
     });
 
     // 4. Install packages
-    const defaultPackages = ["react-router-dom"];
-    const allPackages = [...defaultPackages, ...packages];
+    const allPackages = [...routingPackages, ...packages];
     if (allPackages.length > 0) {
         run(`npm install ${allPackages.join(" ")}`, projectPath);
+        if (config.devPackages.length > 0) {
+            run(`npm i -D ${config.devPackages.join(" ")}`, projectPath);
+        }
     }
 
     // 5. Setup PWA if selected (after folder structure is created)
@@ -90,7 +117,7 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
 
     // 9. Generate clean templates
     createAppComponent(projectPath, projectName, isPWA, isTS);
-    setupRouterMain(projectPath, cssFramework, isTS);
+    setupRoutingFramework(projectPath, routingFramework, cssFramework, isTS);
     
     // 10. Create comprehensive README
     createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA, isTS);
