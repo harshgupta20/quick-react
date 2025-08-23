@@ -4,7 +4,7 @@ import path from "path";
 import { run, createFolder, deleteFile } from './lib/utils.js';
 import { initializePWA } from './lib/pwa.js';
 import { setupCSSFramework } from './lib/css-frameworks.js';
-import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme } from './lib/templates.js';
+import { createAxiosSetup, createAppComponent, createPWAReadme } from './lib/templates.js';
 import { setupRoutingFramework } from "./lib/router-setup.js";
 
 (async () => {
@@ -25,7 +25,7 @@ import { setupRoutingFramework } from "./lib/router-setup.js";
             type: "list",
             name: "routingFramework",
             message: "Choose a routing framework:",
-            choices: ["React Router", "Tanstack Router", "None (Manual Setup)",]
+            choices: ["React Router", "Tanstack Router",]
         },
         {
             type: "confirm",
