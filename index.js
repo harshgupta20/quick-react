@@ -124,6 +124,6 @@ import { setupRoutingFramework } from "./lib/router-setup.js";
     console.log(`\nNext steps:\n  cd ${projectName}\n  npm install\n  npm run dev`);
     
     if (isPWA) {
-        console.log(`\n📱 To test PWA:\n  npm run build\n  npm run preview\n  Open http://localhost:4173 and test install/offline features`);
+        console.log(`\n📱 To test PWA:\n  npm run build\n  npm run preview\n  Open http://localhost:5173 and test install/offline features`);
     }
 })();
