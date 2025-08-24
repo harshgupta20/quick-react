@@ -1,11 +1,28 @@
 #!/usr/bin/env node
 import { input, select, confirm, checkbox } from "@inquirer/prompts"
+import { select as selectPro } from 'inquirer-select-pro';
 import path from "path";
 import { run, createFolder, deleteFile } from './lib/utils.js';
 import { initializePWA } from './lib/pwa.js';
 import { setupCSSFramework } from './lib/css-frameworks.js';
 import { createAxiosSetup, createAppComponent, createPWAReadme } from './lib/templates.js';
 import { setupRoutingFramework } from "./lib/router-setup.js";
+
+const getExtraPackages = async (input) => {
+    if (!input) return []; //if no input, return empty array
+
+    const res = await fetch(
+        `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(input)}`
+    );
+
+    const data = await res.json();
+    if (!data.objects) return []; //if no results, return empty array
+
+    return data.objects.map((pkg) => ({
+        name: `${pkg.package.name} \x1b[2m${pkg.package.description || ''}\x1b[0m`, //x1b[2m makes text dim, \x1b[0m resets it]
+        value: pkg.package.name,
+    }))
+};
 
 (async () => {
     // 1. Collect user inputs
@@ -19,17 +36,27 @@ import { setupRoutingFramework } from "./lib/router-setup.js";
         choices: ["React Router", "Tanstack Router",]
     })
     const isPWA = await confirm({ message: "Do you want to make this a Progressive Web App (PWA)?", default: false });
-    const packages = await checkbox({
-        message: "Select optional packages:",
-        choices: [
-            { name: "Axios", value: "axios" },
-            { name: "React Icons", value: "react-icons" },
-            { name: "React Hook Form", value: "react-hook-form" },
-            { name: "Yup", value: "yup" },
-            { name: "Formik", value: "formik" },
-            { name: "Moment.js", value: "moment" }
-        ]
+
+    const extraPackages = await selectPro({
+        message: 'Search extra packages to add',
+        multiple: true,
+        clearInputWhenSelected: true,
+        pageSize: 10,
+        options: getExtraPackages,
     });
+
+    let userChosenPackages = [];
+    if (extraPackages.length > 0) {
+        userChosenPackages = await checkbox({
+            message: "These extra packages will be installed:",
+            choices: extraPackages.map(pkg => ({
+                name: pkg,
+                value: pkg,
+                checked: true,
+            })),
+        });
+
+    }
 
     const projectPath = path.join(process.cwd(), projectName);
 
@@ -63,7 +90,7 @@ import { setupRoutingFramework } from "./lib/router-setup.js";
     });
 
     // 4. Install packages
-    const allPackages = [...routingPackages, ...packages];
+    const allPackages = [...routingPackages, ...userChosenPackages];
     if (allPackages.length > 0) {
         run(`npm install ${allPackages.join(" ")}`, projectPath);
         if (config.devPackages.length > 0) {
@@ -80,7 +107,7 @@ import { setupRoutingFramework } from "./lib/router-setup.js";
     setupCSSFramework(cssFramework, projectPath);
 
     // 7. Setup Axios if selected
-    if (packages.includes("axios")) {
+    if (userChosenPackages.includes("axios")) {
         createAxiosSetup(projectPath);
     }
 
@@ -95,7 +122,7 @@ import { setupRoutingFramework } from "./lib/router-setup.js";
     setupRoutingFramework(projectPath, routingFramework, cssFramework);
 
     // 10. Create comprehensive README
-    createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA);
+    createPWAReadme(projectPath, projectName, cssFramework, userChosenPackages, isPWA);
 
     // 11. Success message
     console.log("\n✅ Setup complete!");
