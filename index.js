@@ -55,7 +55,14 @@ const getExtraPackages = async (input) => {
         clearInputWhenSelected: true,
         pageSize: 10,
         options: getExtraPackages,
-   });
+        theme: {
+            style: {
+                renderSelectedOptions: (selectedOptions) => {
+                    return selectedOptions.map(option => option.value).join(', ');
+                }
+            }
+        }
+    });
 
     let selectedExtraPackages = [];
     if (extraPackages.length > 0) {
