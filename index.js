@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import inquirer from "inquirer";
+import { input, select, confirm, checkbox } from "@inquirer/prompts"
+import { select as selectPro } from 'inquirer-select-pro';
 import path from "path";
 import { run, createFolder, deleteFile } from "./lib/utils.js";
 import { initializePWA } from "./lib/pwa.js";
@@ -11,6 +12,22 @@ import {
   createPWAReadme,
 } from "./lib/templates.js";
 import { setupRoutingFramework } from "./lib/router-setup.js";
+
+const getExtraPackages = async (input) => {
+    if (!input) return []; //if no input, return empty array
+
+    const res = await fetch(
+        `https://registry.npmjs.org/-/v1/search?text=${encodeURIComponent(input)}`
+    );
+
+    const data = await res.json();
+    if (!data.objects) return []; //if no results, return empty array
+
+    return data.objects.map((pkg) => ({
+        name: `${pkg.package.name} \x1b[2m${pkg.package.description || ''}\x1b[0m`, //x1b[2m makes text dim, \x1b[0m resets it]
+        value: pkg.package.name,
+    }))
+};
 
 (async () => {
   // 1. Collect user inputs
