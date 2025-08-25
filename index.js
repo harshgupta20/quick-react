@@ -41,8 +41,19 @@ import {
         { name: "Yup", value: "yup" },
         { name: "Formik", value: "formik" },
         { name: "Moment.js", value: "moment" },
-        { name: "ReduxJs/Toolkit", value: "@reduxjs/toolkit" },
         { name: "React Bindings (React-Redux)", value: "react-redux" },
+      ],
+    },
+    {
+      type: "list",
+      name: "stateManagement",
+      message: "Choose a State Management Tool:",
+      choices: [
+        { name: "None", value: "" },
+        { name: "ReduxJs/Toolkit", value: "@reduxjs/toolkit react-redux" },
+        { name: "Zustand", value: "zustand" },
+        { name: "MobX", value: "mobx" },
+        { name: "Recoil", value: "recoil" },
       ],
     },
     {
@@ -53,7 +64,14 @@ import {
     },
   ])
 
-  const { projectName, cssFramework, isPWA, packages, devPackages } = answers
+  const {
+    projectName,
+    cssFramework,
+    isPWA,
+    packages,
+    stateManagement,
+    devPackages,
+  } = answers
   const projectPath = path.join(process.cwd(), projectName)
 
   console.log(
@@ -72,6 +90,12 @@ import {
   // 4. Install packages
   const defaultPackages = ["react-router-dom"]
   const allPackages = [...defaultPackages, ...packages]
+
+  // Add state management package if selected
+  if (stateManagement) {
+    allPackages.push(...stateManagement.split(" "))
+  }
+
   if (allPackages.length > 0) {
     run(`npm install ${allPackages.join(" ")}`, projectPath)
   }
