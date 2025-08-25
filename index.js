@@ -26,7 +26,7 @@ const getExtraPackages = async (input) => {
 
 (async () => {
     // 1. Collect user inputs
-    const projectName = await input({ message: "Enter project name:" });
+    const projectName = await input({ message: "Enter project name:", required: true });
     const cssFramework = await select({
         message: "Choose a CSS framework:",
         choices: ["Tailwind", "Bootstrap (CDN)", "React Bootstrap", "MUI"]
@@ -37,25 +37,36 @@ const getExtraPackages = async (input) => {
     })
     const isPWA = await confirm({ message: "Do you want to make this a Progressive Web App (PWA)?", default: false });
 
+    const packages = await checkbox({
+        message: "Select optional packages:",
+        choices: [
+            { name: "Axios", value: "axios" },
+            { name: "React Icons", value: "react-icons" },
+            { name: "React Hook Form", value: "react-hook-form" },
+            { name: "Yup", value: "yup" },
+            { name: "Formik", value: "formik" },
+            { name: "Moment.js", value: "moment" }
+        ]
+    });
+
     const extraPackages = await selectPro({
         message: 'Search extra packages to add',
         multiple: true,
         clearInputWhenSelected: true,
         pageSize: 10,
         options: getExtraPackages,
-    });
+   });
 
-    let userChosenPackages = [];
+    let selectedExtraPackages = [];
     if (extraPackages.length > 0) {
-        userChosenPackages = await checkbox({
+        selectedExtraPackages = await checkbox({
             message: "These extra packages will be installed:",
             choices: extraPackages.map(pkg => ({
                 name: pkg,
                 value: pkg,
                 checked: true,
             })),
-        });
-
+        })
     }
 
     const projectPath = path.join(process.cwd(), projectName);
@@ -90,7 +101,7 @@ const getExtraPackages = async (input) => {
     });
 
     // 4. Install packages
-    const allPackages = [...routingPackages, ...userChosenPackages];
+    const allPackages = [...routingPackages, ...packages, ...selectedExtraPackages];
     if (allPackages.length > 0) {
         run(`npm install ${allPackages.join(" ")}`, projectPath);
         if (config.devPackages.length > 0) {
@@ -107,7 +118,7 @@ const getExtraPackages = async (input) => {
     setupCSSFramework(cssFramework, projectPath);
 
     // 7. Setup Axios if selected
-    if (userChosenPackages.includes("axios")) {
+    if (packages.includes("axios")) {
         createAxiosSetup(projectPath);
     }
 
@@ -122,7 +133,7 @@ const getExtraPackages = async (input) => {
     setupRoutingFramework(projectPath, routingFramework, cssFramework);
 
     // 10. Create comprehensive README
-    createPWAReadme(projectPath, projectName, cssFramework, userChosenPackages, isPWA);
+    createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA);
 
     // 11. Success message
     console.log("\n✅ Setup complete!");
