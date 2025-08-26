@@ -146,7 +146,7 @@ const getExtraPackages = async (input) => {
     // 11. Initialize Git repository
     initializeGit(projectPath);
 
-    // 11. Success message
+    // 12. Success message
     console.log("\n✅ Setup complete!");
     if (isPWA) {
         console.log("📱 PWA features enabled - your app can be installed on mobile devices!");
