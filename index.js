@@ -7,6 +7,7 @@ import { initializePWA } from './lib/pwa.js';
 import { setupCSSFramework } from './lib/css-frameworks.js';
 import { createAxiosSetup, createAppComponent, createPWAReadme } from './lib/templates.js';
 import { setupRoutingFramework } from "./lib/router-setup.js";
+import { initializeGit } from "./lib/setup-git.js";
 
 const getExtraPackages = async (input) => {
     if (!input) return []; //if no input, return empty array
@@ -142,7 +143,10 @@ const getExtraPackages = async (input) => {
     // 10. Create comprehensive README
     createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA);
 
-    // 11. Success message
+    // 11. Initialize Git repository
+    initializeGit(projectPath);
+
+    // 12. Success message
     console.log("\n✅ Setup complete!");
     if (isPWA) {
         console.log("📱 PWA features enabled - your app can be installed on mobile devices!");
