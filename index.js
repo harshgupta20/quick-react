@@ -25,6 +25,8 @@ const getExtraPackages = async (input) => {
     }))
 };
 
+const githubRepo = "https://github.com/harshgupta20/quickstart-react/issues"; 
+
 (async () => {
     // 1. Collect user inputs
     const projectName = await input({ message: "Enter project name:", required: true });
@@ -157,4 +159,7 @@ const getExtraPackages = async (input) => {
     if (isPWA) {
         console.log(`\n📱 To test PWA:\n  npm run build\n  npm run preview\n  Open http://localhost:5173 and test install/offline features`);
     }
+    
+    console.log(`\n🙌 Found a bug or want to improve this project?\nSubmit a PR or open an issue here: ${githubRepo}\n`);
+    console.log("\nHappy coding! 🎉");
 })();
