@@ -1,6 +1,6 @@
 {
   "name": "quickstart-react",
-  "version": "1.1.2",
+  "version": "2.1.0",
   "description": "A CLI tool to quickly scaffold a React + Vite project with optional CSS frameworks and useful packages, ready to use out of the box.",
   "main": "index.js",
   "type": "module",
