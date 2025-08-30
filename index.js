@@ -30,6 +30,10 @@ const githubRepo = "https://github.com/harshgupta20/quickstart-react/issues";
 (async () => {
     // 1. Collect user inputs
     const projectName = await input({ message: "Enter project name:", required: true });
+    const language = await select({
+        message: "Choose project language:",
+        choices: ["TypeScript", "JavaScript"]
+    })
     const cssFramework = await select({
         message: "Choose a CSS framework:",
         choices: ["Tailwind", "Bootstrap (CDN)", "React Bootstrap", "MUI"]
@@ -80,11 +84,12 @@ const githubRepo = "https://github.com/harshgupta20/quickstart-react/issues";
     }
 
     const projectPath = path.join(process.cwd(), projectName);
+    const isTS = language == "TypeScript";
 
     console.log(`\n🚀 Creating ${projectName}${isPWA ? ' with PWA capabilities' : ''}...`);
 
     // 2. Create Vite project
-    run(`npm create vite@latest ${projectName} -- --template react`);
+    run(`npm create vite@latest ${projectName} -- --template ${isTS ? "react-ts" : "react"}`);
 
     // 3. Create all necessary folder structure first
     const folders = ["components", "pages", "hooks", "store", "utils", "assets"];
@@ -121,15 +126,15 @@ const githubRepo = "https://github.com/harshgupta20/quickstart-react/issues";
 
     // 5. Setup PWA if selected (after folder structure is created)
     if (isPWA) {
-        initializePWA(projectPath, projectName);
+        initializePWA(projectPath, projectName, isTS);
     }
 
     // 6. Setup CSS framework
-    setupCSSFramework(cssFramework, projectPath);
+    setupCSSFramework(cssFramework, projectPath, isTS);
 
     // 7. Setup Axios if selected
     if (packages.includes("axios")) {
-        createAxiosSetup(projectPath);
+        createAxiosSetup(projectPath, isTS);
     }
 
     // 8. Clean up default boilerplate files
@@ -139,11 +144,11 @@ const githubRepo = "https://github.com/harshgupta20/quickstart-react/issues";
     }
 
     // 9. Generate clean templates
-    createAppComponent(projectPath, projectName, isPWA);
-    setupRoutingFramework(projectPath, routingFramework, cssFramework);
+    createAppComponent(projectPath, projectName, isPWA, isTS);
+    setupRoutingFramework(projectPath, routingFramework, cssFramework, isTS);
 
     // 10. Create comprehensive README
-    createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA);
+    createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA, isTS);
 
     // 11. Initialize Git repository
     initializeGit(projectPath);
