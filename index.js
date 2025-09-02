@@ -25,7 +25,7 @@ const getExtraPackages = async (input) => {
     }))
 };
 
-const githubRepo = "https://github.com/harshgupta20/quickstart-react/issues"; 
+const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues"; 
 
 (async () => {
     // 1. Collect user inputs
@@ -165,6 +165,6 @@ const githubRepo = "https://github.com/harshgupta20/quickstart-react/issues";
         console.log(`\n📱 To test PWA:\n  npm run build\n  npm run preview\n  Open http://localhost:5173 and test install/offline features`);
     }
     
-    console.log(`\n🙌 Found a bug or want to improve this project?\nSubmit a PR or open an issue here: ${githubRepo}\n`);
+    console.log(`\n🙌 Found a bug or want to improve this project?\nSubmit a PR or open an issue here: ${GITHUB_REPO_URL}\n`);
     console.log("\nHappy coding! 🎉");
 })();
