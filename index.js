@@ -8,6 +8,7 @@ import { setupCSSFramework } from './lib/css-frameworks.js';
 import { createAxiosSetup, createAppComponent, createPWAReadme } from './lib/templates.js';
 import { setupRoutingFramework } from "./lib/router-setup.js";
 import { initializeGit } from "./lib/setup-git.js";
+import { setupFirebase } from "./lib/firebase.js";
 
 const getExtraPackages = async (input) => {
     if (!input) return []; //if no input, return empty array
@@ -44,7 +45,7 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
     })
     const isPWA = await confirm({ message: "Do you want to make this a Progressive Web App (PWA)?", default: false });
 
-    const packages = await checkbox({
+    let packages = await checkbox({
         message: "Select optional packages:",
         choices: [
             { name: "Axios", value: "axios" },
@@ -52,9 +53,23 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
             { name: "React Hook Form", value: "react-hook-form" },
             { name: "Yup", value: "yup" },
             { name: "Formik", value: "formik" },
-            { name: "Moment.js", value: "moment" }
+            { name: "Moment.js", value: "moment" },
+            { name: "Firebase (Firestore utils + env)", value: "firebase" }
         ]
     });
+
+    // Fallback: some terminals or clients may not toggle checkboxes reliably.
+    // If Firebase wasn't picked above, ask a simple confirm so the user can't miss it.
+    if (!packages.includes('firebase')) {
+        try {
+            const firebaseConfirm = await confirm({ message: 'Would you like to add Firebase (Firestore utils + env)?', default: false });
+            if (firebaseConfirm) {
+                packages = [...packages, 'firebase'];
+            }
+        } catch (e) {
+            // ignore confirm errors and continue
+        }
+    }
 
     const extraPackages = await selectPro({
         message: 'Search extra packages to add',
@@ -116,7 +131,8 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
     });
 
     // 4. Install packages
-    const allPackages = [...routingPackages, ...packages, ...selectedExtraPackages];
+    const firebasePkg = packages.includes("firebase") ? ["firebase"] : [];
+    const allPackages = [...routingPackages, ...packages.filter(p => p !== 'firebase'), ...selectedExtraPackages, ...firebasePkg];
     if (allPackages.length > 0) {
         run(`npm install ${allPackages.join(" ")}`, projectPath);
         if (config.devPackages.length > 0) {
@@ -135,6 +151,11 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
     // 7. Setup Axios if selected
     if (packages.includes("axios")) {
         createAxiosSetup(projectPath, isTS);
+    }
+
+    // 7b. Setup Firebase if selected
+    if (packages.includes("firebase")) {
+        setupFirebase(projectPath, isTS);
     }
 
     // 8. Clean up default boilerplate files
