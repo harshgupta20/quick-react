@@ -21,7 +21,10 @@ npx quickstart-react
 When you run `npx quickstart-react`, you will be prompted to:
 1. **Enter Project Name** — e.g., `my-app`
 2. **Choose CSS Framework** — Tailwind, Bootstrap, or MUI
-3. **Select Optional Packages** — choose from a list of commonly used React libraries
+3. **Choose Routing** — React Router or TanStack Router
+4. **Enable PWA** — optional
+5. **Setup Firebase** — simple Yes/No confirmation
+6. **Select Other Optional Packages** — Axios, React Icons, React Hook Form, Yup, Formik, Moment.js, etc.
 
 Example run:
 ```bash
@@ -32,6 +35,7 @@ npx quickstart-react
 ```
 ? Enter project name: my-portfolio
 ? Choose a CSS framework: Tailwind
+? Setup Firebase in this project? Yes
 ? Select optional packages: Axios, React Icons
 ```
 
@@ -87,6 +91,7 @@ You can add these during setup:
 - **Yup** — schema validation
 - **Formik** — form management
 - **Moment.js** — date/time utilities
+ - **Firebase** — added via a dedicated confirmation; installs the `firebase` package and generates Firestore utils (`src/utils/firebase.[ts|js]`) plus `.env` placeholders
 
 ## 🚀 Quick Start
 ```bash

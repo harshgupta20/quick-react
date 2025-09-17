@@ -8,6 +8,7 @@ import { setupCSSFramework } from './lib/css-frameworks.js';
 import { createAxiosSetup, createAppComponent, createPWAReadme } from './lib/templates.js';
 import { setupRoutingFramework } from "./lib/router-setup.js";
 import { initializeGit } from "./lib/setup-git.js";
+import { setupFirebase } from "./lib/firebase.js";
 
 const getExtraPackages = async (input) => {
     if (!input) return []; //if no input, return empty array
@@ -44,7 +45,10 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
     })
     const isPWA = await confirm({ message: "Do you want to make this a Progressive Web App (PWA)?", default: false });
 
-    const packages = await checkbox({
+    // Dedicated Firebase confirmation
+    const includeFirebase = await confirm({ message: "Do you want to setup Firebase in this project?", default: false });
+
+    let packages = await checkbox({
         message: "Select optional packages:",
         choices: [
             { name: "Axios", value: "axios" },
@@ -52,9 +56,13 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
             { name: "React Hook Form", value: "react-hook-form" },
             { name: "Yup", value: "yup" },
             { name: "Formik", value: "formik" },
-            { name: "Moment.js", value: "moment" }
+            { name: "Moment.js", value: "moment" },
+            // Firebase now handled via dedicated confirmation above
         ]
     });
+
+    // Merge firebase selection into a derived list for docs/readme purposes
+    const packagesWithFirebase = includeFirebase ? [...packages, 'firebase'] : [...packages];
 
     const extraPackages = await selectPro({
         message: 'Search extra packages to add',
@@ -116,7 +124,8 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
     });
 
     // 4. Install packages
-    const allPackages = [...routingPackages, ...packages, ...selectedExtraPackages];
+    const firebasePkg = includeFirebase ? ["firebase"] : [];
+    const allPackages = Array.from(new Set([...routingPackages, ...packages, ...selectedExtraPackages, ...firebasePkg]));
     if (allPackages.length > 0) {
         run(`npm install ${allPackages.join(" ")}`, projectPath);
         if (config.devPackages.length > 0) {
@@ -137,6 +146,11 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
         createAxiosSetup(projectPath, isTS);
     }
 
+    // 7b. Setup Firebase if selected
+    if (includeFirebase) {
+        setupFirebase(projectPath, isTS);
+    }
+
     // 8. Clean up default boilerplate files
     deleteFile(path.join(projectPath, "src", "App.css"));
     if (cssFramework !== "Tailwind") {
@@ -148,7 +162,7 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
     setupRoutingFramework(projectPath, routingFramework, cssFramework, isTS);
 
     // 10. Create comprehensive README
-    createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA, isTS);
+    createPWAReadme(projectPath, projectName, cssFramework, packagesWithFirebase, isPWA, isTS);
 
     // 11. Initialize Git repository
     initializeGit(projectPath);
