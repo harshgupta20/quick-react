@@ -45,6 +45,9 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
     })
     const isPWA = await confirm({ message: "Do you want to make this a Progressive Web App (PWA)?", default: false });
 
+    // Dedicated Firebase confirmation
+    const includeFirebase = await confirm({ message: "Do you want to setup Firebase in this project?", default: false });
+
     let packages = await checkbox({
         message: "Select optional packages:",
         choices: [
@@ -54,22 +57,12 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
             { name: "Yup", value: "yup" },
             { name: "Formik", value: "formik" },
             { name: "Moment.js", value: "moment" },
-            { name: "Firebase (Firestore utils + env)", value: "firebase" }
+            // Firebase now handled via dedicated confirmation above
         ]
     });
 
-    // Fallback: some terminals or clients may not toggle checkboxes reliably.
-    // If Firebase wasn't picked above, ask a simple confirm so the user can't miss it.
-    if (!packages.includes('firebase')) {
-        try {
-            const firebaseConfirm = await confirm({ message: 'Would you like to add Firebase (Firestore utils + env)?', default: false });
-            if (firebaseConfirm) {
-                packages = [...packages, 'firebase'];
-            }
-        } catch (e) {
-            // ignore confirm errors and continue
-        }
-    }
+    // Merge firebase selection into a derived list for docs/readme purposes
+    const packagesWithFirebase = includeFirebase ? [...packages, 'firebase'] : [...packages];
 
     const extraPackages = await selectPro({
         message: 'Search extra packages to add',
@@ -131,8 +124,8 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
     });
 
     // 4. Install packages
-    const firebasePkg = packages.includes("firebase") ? ["firebase"] : [];
-    const allPackages = [...routingPackages, ...packages.filter(p => p !== 'firebase'), ...selectedExtraPackages, ...firebasePkg];
+    const firebasePkg = includeFirebase ? ["firebase"] : [];
+    const allPackages = Array.from(new Set([...routingPackages, ...packages, ...selectedExtraPackages, ...firebasePkg]));
     if (allPackages.length > 0) {
         run(`npm install ${allPackages.join(" ")}`, projectPath);
         if (config.devPackages.length > 0) {
@@ -154,7 +147,7 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
     }
 
     // 7b. Setup Firebase if selected
-    if (packages.includes("firebase")) {
+    if (includeFirebase) {
         setupFirebase(projectPath, isTS);
     }
 
@@ -169,7 +162,7 @@ const GITHUB_REPO_URL = "https://github.com/harshgupta20/quickstart-react/issues
     setupRoutingFramework(projectPath, routingFramework, cssFramework, isTS);
 
     // 10. Create comprehensive README
-    createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA, isTS);
+    createPWAReadme(projectPath, projectName, cssFramework, packagesWithFirebase, isPWA, isTS);
 
     // 11. Initialize Git repository
     initializeGit(projectPath);
