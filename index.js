@@ -4,15 +4,16 @@ import path from "path";
 import { run, createFolder, deleteFile } from './lib/utils.js';
 import { initializePWA } from './lib/pwa.js';
 import { setupCSSFramework } from './lib/css-frameworks.js';
+import { setupStateManagement } from './lib/store.js';
 import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme } from './lib/templates.js';
 
 (async () => {
     // 1. Collect user inputs
     const answers = await inquirer.prompt([
-        { 
-            type: "input", 
-            name: "projectName", 
-            message: "Enter project name:" 
+        {
+            type: "input",
+            name: "projectName",
+            message: "Enter project name:"
         },
         {
             type: "list",
@@ -38,10 +39,16 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
                 { name: "Formik", value: "formik" },
                 { name: "Moment.js", value: "moment" }
             ]
+        },
+        {
+            type: "list",
+            name: "stateManagement",
+            message: "Choose a state management library:",
+            choices: ["None", "Zustand", "Redux Toolkit", "Jotai"]
         }
     ]);
 
-    const { projectName, cssFramework, isPWA, packages } = answers;
+    const { projectName, cssFramework, isPWA, packages,stateManagement } = answers;
     const projectPath = path.join(process.cwd(), projectName);
 
     console.log(`\n🚀 Creating ${projectName}${isPWA ? ' with PWA capabilities' : ''}...`);
@@ -50,13 +57,16 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
     run(`npm create vite@latest ${projectName} -- --template react`);
 
     // 3. Create all necessary folder structure first
-    const folders = ["components", "pages", "hooks", "store", "utils", "assets"];
+    const folders = ["components", "pages", "hooks",  "utils", "assets"];
     folders.forEach((folder) => {
         createFolder(path.join(projectPath, "src", folder));
     });
 
     // 4. Install packages
     const defaultPackages = ["react-router-dom"];
+    if (stateManagement === "Zustand") defaultPackages.push("zustand");
+    if (stateManagement === "Redux Toolkit") defaultPackages.push("@reduxjs/toolkit react-redux");
+    if (stateManagement === "Jotai") defaultPackages.push("jotai");
     const allPackages = [...defaultPackages, ...packages];
     if (allPackages.length > 0) {
         run(`npm install ${allPackages.join(" ")}`, projectPath);
@@ -84,18 +94,21 @@ import { createAxiosSetup, createAppComponent, setupRouterMain, createPWAReadme 
     // 9. Generate clean templates
     createAppComponent(projectPath, projectName, isPWA);
     setupRouterMain(projectPath, cssFramework);
-    
-    // 10. Create comprehensive README
+
+    //10. Setup state management boilerplate if selected
+    setupStateManagement(stateManagement, projectPath);
+
+    // 11. Create comprehensive README
     createPWAReadme(projectPath, projectName, cssFramework, packages, isPWA);
 
-    // 11. Success message
+    // 12. Success message
     console.log("\n✅ Setup complete!");
     if (isPWA) {
         console.log("📱 PWA features enabled - your app can be installed on mobile devices!");
         console.log("⚠️  Important: Replace placeholder SVG icons with proper PNG icons for production");
     }
     console.log(`\nNext steps:\n  cd ${projectName}\n  npm install\n  npm run dev`);
-    
+
     if (isPWA) {
         console.log(`\n📱 To test PWA:\n  npm run build\n  npm run preview\n  Open http://localhost:5173 and test install/offline features`);
     }
