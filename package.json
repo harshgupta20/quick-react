@@ -1,6 +1,6 @@
 {
   "name": "quickstart-react",
-  "version": "1.1.2",
+  "version": "2.1.0",
   "description": "A CLI tool to quickly scaffold a React + Vite project with optional CSS frameworks and useful packages, ready to use out of the box.",
   "main": "index.js",
   "type": "module",
@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/harshgupta20/quickstart-react#readme",
   "dependencies": {
-    "inquirer": "^9.2.7"
+    "@inquirer/prompts": "^7.8.3",
+    "inquirer-select-pro": "^1.0.0-alpha.9"
   }
 }
